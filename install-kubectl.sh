@@ -18,7 +18,9 @@ echo -e "${MSG_PREFIX} starting $0"
 
 # install kubectl
 rm -rf "${KUBE_INSTALL_PATH}"
-curl -Lo $HOME/kubernetes.tar.gz https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VERSION}/kubernetes.tar.gz
-tar -C $HOME -xf $HOME/kubernetes.tar.gz
-rm -f $HOME/kubernetes.tar.gz
-mv $HOME/kubernetes "${KUBE_INSTALL_PATH}"
+mkdir -p "${KUBE_INSTALL_PATH}/platforms"
+curl -Ls $HOME/kubernetes.tar.gz https://github.com/kubernetes/kubernetes/releases/download/v${KUBE_VERSION}/kubernetes.tar.gz | tar -C $HOME -xz
+mv $HOME/kubernetes/platforms/linux "${KUBE_INSTALL_PATH}"/platforms/linux
+
+# cleanup
+rm -rf $HOME/kubernetes
