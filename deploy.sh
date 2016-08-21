@@ -23,6 +23,21 @@ set -e
 #       KUBE_MANIFEST_REPO_PATH. The list must be separated with a column.
 #     - KUBECONFIG_PATH is the path to kubeconfig to be used by kubectl.
 #
+# Systemd
+#   Systemd deployment is a special deployment that will exec docker pull on a
+#   specified image and restart the systemd unit using the image. It's useful
+#   for deployments using https://github.com/jwilder/nginx-proxy for example.
+#
+#   The required variables:
+#     - SYSTEMD_SSH_HOST is the host where the systemd unit files is running
+#     - SYSTEMD_SSH_USER is the user to use for SSH connection
+#     - SYSTEMD_SSH_PORT is the port for the SSH connection, default to 22.
+#     - SYSTEMD_SSH_IDENTITY_FILE is the identity file to use for the SSH
+#       connection.
+#     - SYSTEMD_DOCKER_IMAGE is the docker image to pull. Optional
+#     - SYSTEMD_USE_SUDO if not empty sudo will be used.
+#     - SYSTEMD_UNIT is the unit to restart
+#
 
 BASE_DIR="$(cd "$(dirname "${0}")" && pwd)"
 MSG_PREFIX="[deploy] >>>"
@@ -43,14 +58,24 @@ else
 fi
 
 # deploy to kubernetes
-if [[ -z "${DEPLOY_KUBERNETES_BRANCH}" ]]; then
-  echo "${MSG_PREFIX} DEPLOY_KUBERNETES_BRANCH is not set, skipping the deployment to kubernetes"
-  exit 0
-fi
-if [[ "x${DEPLOY_KUBERNETES_BRANCH}" = "xALL" ]] || [[ "x${DEPLOY_KUBERNETES_BRANCH}" = "x${TRAVIS_BRANCH}" ]]; then
-  "${BASE_DIR}/update-kube-manifest.sh"
-  "${BASE_DIR}/kubectl-apply.sh"
+if [[ -n "${DEPLOY_KUBERNETES_BRANCH}" ]]; then
+  if [[ "x${DEPLOY_KUBERNETES_BRANCH}" = "xALL" ]] || [[ "x${DEPLOY_KUBERNETES_BRANCH}" = "x${TRAVIS_BRANCH}" ]]; then
+    "${BASE_DIR}/update-kube-manifest.sh"
+    "${BASE_DIR}/kubectl-apply.sh"
+  else
+    echo "${MSG_PREFIX} Not deploying to kubernetes because the branch ${TRAVIS_BRANCH} did not match ${DEPLOY_KUBERNETES_BRANCH}"
+  fi
 else
-  echo "${MSG_PREFIX} Not deploying to kubernetes because the branch ${TRAVIS_BRANCH} did not match ${DEPLOY_KUBERNETES_BRANCH}"
-  exit 0
+  echo "${MSG_PREFIX} DEPLOY_KUBERNETES_BRANCH is not set, skipping the deployment to kubernetes"
+fi
+
+# restart systemd unit
+if [[ -n "${DEPLOY_SYSTEMD_BRANCH}" ]]; then
+  if [[ "x${DEPLOY_SYSTEMD_BRANCH}" = "xALL" ]] || [[ "x${DEPLOY_SYSTEMD_BRANCH}" = "x${TRAVIS_BRANCH}" ]]; then
+    "${BASE_DIR}/deploy-systemd.sh"
+  else
+    echo "${MSG_PREFIX} Not deploying to systemd because the branch ${TRAVIS_BRANCH} did not match ${DEPLOY_SYSTEMD_BRANCH}"
+  fi
+else
+  echo "${MSG_PREFIX} DEPLOY_SYSTEMD_BRANCH is not set, skipping the deployment to systemd"
 fi
