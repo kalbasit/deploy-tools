@@ -1,7 +1,30 @@
 #!/bin/bash
 set -e
 
-BASE_DIR="`cd $(dirname $0) && pwd`"
+# deploy.sh allows you to deploy to multiple providers
+#
+# Docker image
+#   To build a docker image, you must set the following variables:
+#     - BUILD_IMAGE_BRANCH must be set to a branch name or `ALL`. `ALL`
+#       is a special branch name that matches all branches.
+#     - DOCKER_USER must be set if pushing to hub.docker.com
+#     - DOCKER_PASS must be set if pushing to hub.docker.com
+#
+# Kubernetes
+#   To deploy to Kubernetes you must set the following variables:
+#     - DEPLOY_KUBERNETES_BRANCH must be set to a branch name or `ALL`. `ALL`
+#       is a special branch name that matches all branches.
+#     - KUBE_MANIFEST_REPO_PATH is the local path where to find the repository
+#       containing the kube manifest. It must be a git repository and
+#       credentials must allow the deployer to push to origin/master.
+#     - PROJECT_NAME is the name of the project, it will be used as prefix to
+#       the commit message in the manifests repository.
+#     - KUBE_MANIFEST_FILES is a list of manifest paths relative to
+#       KUBE_MANIFEST_REPO_PATH. The list must be separated with a column.
+#     - KUBECONFIG_PATH is the path to kubeconfig to be used by kubectl.
+#
+
+BASE_DIR="$(cd "$(dirname "${0}")" && pwd)"
 MSG_PREFIX="[deploy] >>>"
 
 # announcement
