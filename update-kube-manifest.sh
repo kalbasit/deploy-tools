@@ -26,17 +26,15 @@ if [[ -z "${KUBE_MANIFEST_FILES}" ]]; then
 fi
 
 cd "${KUBE_MANIFEST_REPO_PATH}"
-for file in `echo $KUBE_MANIFEST_FILES | tr ":" "\n"`; do
+for file in $(echo "${KUBE_MANIFEST_FILES}" | tr ":" "\n"); do
   if [[ ! -w ${file} ]]; then
     echo "${MSG_PREFIX} unable to write to ${file}"
     exit 1
   fi
   echo -e "${MSG_PREFIX} updating the image in ${file} to ${COMMIT}"
-  sed -e "s#image: \(.*\):[^:]*\$#image: \1:${COMMIT}#g" -i $file
+  sed -e "s#image: \(.*\):[^:]*\$#image: \1:${COMMIT}#g" -i "${file}"
 done
 echo -e "${MSG_PREFIX} commit all changes"
-git config user.name "Publica CI"
-git config user.email "infra@publica-project.com"
 git commit -am "${PROJECT_NAME}: deploy ${COMMIT} done by Travis build #${TRAVIS_BUILD_NUMBER}"
 echo -e "${MSG_PREFIX} pushing all changes to master"
 git push origin master
